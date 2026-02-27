@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+// GitHub API types for release assets
 interface GitHubAsset {
   name: string;
   browser_download_url: string;
