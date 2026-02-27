@@ -1,50 +1,40 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-
-// Create Supabase client with service role for storage access
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET() {
   try {
-    // Get the installer file from the storage bucket
-    const { data } = await supabase
-      .storage
-      .from('installers')
-      .getPublicUrl('solaris-cowork-setup-0.1.2.exe');
-
-    if (!data?.publicUrl) {
+    // Get the latest release from GitHub
+    const response = await fetch(
+      'https://api.github.com/repos/netflypsb/solaris-cowork/releases/latest'
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch GitHub release');
+    }
+    
+    const release = await response.json();
+    
+    // Find the installer asset
+    const installerAsset = release.assets.find((asset: any) => 
+      asset.name.includes('solaris-cowork-setup') && asset.name.endsWith('.exe')
+    );
+    
+    if (!installerAsset) {
       return NextResponse.json(
-        { error: 'Installer not found in storage' },
+        { error: 'Installer not found in GitHub release' },
         { status: 404 }
       );
     }
-
-    // Get file metadata
-    const { data: fileData, error: fileError } = await supabase
-      .storage
-      .from('installers')
-      .list('', {
-        search: 'solaris-cowork-setup-0.1.2.exe',
-      });
-
-    if (fileError) {
-      console.error('Error fetching file metadata:', fileError);
-    }
-
-    const fileInfo = fileData?.[0];
     
     return NextResponse.json({
-      url: data.publicUrl,
-      downloadUrl: data.publicUrl,
-      pathname: 'solaris-cowork-setup-0.1.2.exe',
-      size: fileInfo?.metadata?.size || 197971200, // ~188MB default
-      updated_at: fileInfo?.updated_at,
+      url: installerAsset.browser_download_url,
+      downloadUrl: installerAsset.browser_download_url,
+      pathname: installerAsset.name,
+      size: installerAsset.size,
+      updated_at: installerAsset.updated_at,
+      version: release.tag_name,
     });
   } catch (error) {
-    console.error('Error fetching installer from Supabase:', error);
+    console.error('Error fetching installer from GitHub:', error);
     return NextResponse.json(
       { error: 'Failed to fetch installer' },
       { status: 500 }
