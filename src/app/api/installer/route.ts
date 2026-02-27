@@ -1,5 +1,17 @@
 import { NextResponse } from 'next/server';
 
+interface GitHubAsset {
+  name: string;
+  browser_download_url: string;
+  size: number;
+  updated_at: string;
+}
+
+interface GitHubRelease {
+  tag_name: string;
+  assets: GitHubAsset[];
+}
+
 export async function GET() {
   try {
     // Get the latest release from GitHub
@@ -11,10 +23,10 @@ export async function GET() {
       throw new Error('Failed to fetch GitHub release');
     }
     
-    const release = await response.json();
+    const release: GitHubRelease = await response.json();
     
     // Find the installer asset
-    const installerAsset = release.assets.find((asset: any) => 
+    const installerAsset = release.assets.find((asset: GitHubAsset) => 
       asset.name.includes('solaris-cowork-setup') && asset.name.endsWith('.exe')
     );
     
