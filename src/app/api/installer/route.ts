@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Force dynamic rendering - do not pre-render at build time
+export const dynamic = 'force-dynamic';
+
 // GitHub API types for release assets
 interface GitHubAsset {
   name: string;
@@ -28,7 +31,7 @@ export async function GET() {
     
     // Find the installer asset
     const installerAsset = release.assets.find((asset: GitHubAsset) => 
-      asset.name.includes('solaris-cowork-setup') && asset.name.endsWith('.exe')
+      asset.name.includes('Solaris.Cowork.Setup') && asset.name.endsWith('.exe')
     );
     
     if (!installerAsset) {
