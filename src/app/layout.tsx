@@ -4,11 +4,11 @@ import { dark } from "@clerk/themes";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Solaris — One AI to Replace All Your Software",
+  title: "Solaris - Cowork",
   description:
     "Solaris is the AI-powered workspace that combines project management, documentation, design, learning, and creative tools with one unified AI.",
   openGraph: {
-    title: "Solaris — One AI to Replace All Your Software",
+    title: "Solaris - Cowork",
     description: "The AI coworker that replaces your entire toolbox.",
     images: ["/assets/1.dashboard1.png"],
   },

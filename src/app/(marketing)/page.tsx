@@ -299,9 +299,13 @@ export default function LandingPage() {
               variants={fadeUp}
               className="mt-4 inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-primary/20 to-purple-500/20 border border-primary/30"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                S
-              </div>
+              <Image
+                src="/assets/solaris.jpg"
+                alt="Solaris Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-lg object-cover"
+              />
               <span className="font-semibold text-white">
                 Solaris — One App for Everything
               </span>

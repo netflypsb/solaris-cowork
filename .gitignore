@@ -37,3 +37,6 @@ next-env.d.ts
 
 # Large installer files
 *.exe
+
+.vercel
+.env*.local

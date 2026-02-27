@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const footerLinks = {
   Product: [
@@ -25,9 +26,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                S
-              </div>
+              <Image
+                src="/assets/solaris.jpg"
+                alt="Solaris Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-lg object-cover"
+              />
               <span className="font-semibold text-lg text-white">Solaris</span>
             </div>
             <p className="text-sm text-gray-400">

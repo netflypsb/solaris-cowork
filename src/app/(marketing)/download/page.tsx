@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Monitor, Apple, Download, ArrowRight, Info } from "lucide-react";
+import { Monitor, Apple, Download, ArrowRight, Info, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 const fadeUp = {
@@ -13,7 +14,42 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.15 } },
 };
 
+interface InstallerInfo {
+  url: string;
+  downloadUrl: string;
+  pathname: string;
+  size: number;
+}
+
 export default function DownloadPage() {
+  const [installer, setInstaller] = useState<InstallerInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchInstaller() {
+      try {
+        const response = await fetch('/api/installer');
+        if (!response.ok) {
+          throw new Error('Failed to fetch installer');
+        }
+        const data = await response.json();
+        setInstaller(data);
+      } catch (err) {
+        setError('Installer not available. Please try again later.');
+        console.error('Error fetching installer:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchInstaller();
+  }, []);
+
+  const formatSize = (bytes: number) => {
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(1)} MB`;
+  };
   return (
     <div className="pt-28 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
@@ -59,17 +95,41 @@ export default function DownloadPage() {
               </div>
               <div className="flex items-baseline gap-2 mb-6">
                 <span className="text-sm text-gray-400">Size</span>
-                <span className="text-sm text-white font-medium">~188 MB</span>
+                <span className="text-sm text-white font-medium">
+                  {loading ? 'Loading...' : installer ? formatSize(installer.size) : '~188 MB'}
+                </span>
               </div>
 
-              <a
-                href="/Solaris Cowork Setup 0.1.2.exe"
-                download
-                className="flex items-center justify-center gap-2 w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-lg font-medium transition-colors text-sm"
-              >
-                <Download size={18} />
-                Download for Windows
-              </a>
+              {loading ? (
+                <button
+                  disabled
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-primary/50 text-white/70 rounded-lg font-medium text-sm cursor-not-allowed"
+                >
+                  <Loader2 size={18} className="animate-spin" />
+                  Loading...
+                </button>
+              ) : error ? (
+                <div className="text-center py-3">
+                  <p className="text-sm text-red-400">{error}</p>
+                </div>
+              ) : installer ? (
+                <a
+                  href={installer.downloadUrl}
+                  download
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-lg font-medium transition-colors text-sm"
+                >
+                  <Download size={18} />
+                  Download for Windows
+                </a>
+              ) : (
+                <button
+                  disabled
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-gray-700 text-gray-400 rounded-lg font-medium text-sm cursor-not-allowed"
+                >
+                  <Download size={18} />
+                  Not Available
+                </button>
+              )}
 
               <div className="mt-4 text-xs text-gray-500">
                 <p className="font-medium text-gray-400 mb-1">
