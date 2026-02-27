@@ -6,12 +6,9 @@ const isProtectedRoute = createRouteMatcher([
   "/credits(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+export default clerkMiddleware((auth, req) => {
   if (isProtectedRoute(req)) {
-    const session = await auth();
-    if (!session.userId) {
-      return new Response(null, { status: 401 });
-    }
+    auth.protect();
   }
 });
 
