@@ -13,7 +13,6 @@ import {
   Sparkles,
   Cpu,
   Brain,
-  Users,
   Layers,
   Download,
   Zap,

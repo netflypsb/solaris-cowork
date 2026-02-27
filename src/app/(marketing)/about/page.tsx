@@ -11,7 +11,6 @@ import {
   MessageCircle,
   Mail,
 } from "lucide-react";
-import Link from "next/link";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
