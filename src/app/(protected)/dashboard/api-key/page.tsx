@@ -1,12 +1,22 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useState, useEffect, useCallback } from "react";
-import { Key, Copy, Check, Trash2, AlertTriangle, Loader2, ShieldCheck } from "lucide-react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import {
+  Key,
+  Copy,
+  Check,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  ShieldCheck,
+  ExternalLink,
+  RefreshCw,
+} from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 interface KeyInfo {
-  id: string;
   label: string | null;
   name: string;
   isActive: boolean;
@@ -14,36 +24,64 @@ interface KeyInfo {
   createdAt: string;
 }
 
+interface SubscriptionInfo {
+  status: string;
+  tier: string;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+}
+
 export default function ApiKeyPage() {
-  const { has, isLoaded } = useAuth();
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="w-8 h-8 animate-spin text-indigo-400" /></div>}>
+      <ApiKeyPageInner />
+    </Suspense>
+  );
+}
+
+function ApiKeyPageInner() {
+  const { isLoaded } = useAuth();
+  const searchParams = useSearchParams();
   const [keyInfo, setKeyInfo] = useState<KeyInfo | null>(null);
   const [hasKey, setHasKey] = useState(false);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(
+    null
+  );
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [newKey, setNewKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hasPlan = isLoaded ? has?.({ feature: "api_access" }) : false;
+  const checkoutSuccess = searchParams.get("checkout") === "success";
 
-  const fetchKeyStatus = useCallback(async () => {
+  const fetchStatus = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch("/api/openrouter-key");
+
+      const res = await fetch("/api/user/subscription");
       const data = await res.json();
 
       if (!res.ok) {
-        if (res.status === 403) {
-          setHasKey(false);
-          return;
-        }
-        throw new Error(data.error || "Failed to fetch key status");
+        throw new Error(data.error || "Failed to fetch status");
       }
 
-      setHasKey(data.hasKey);
-      setKeyInfo(data.key || null);
+      setHasSubscription(data.hasSubscription);
+      setSubscription(data.subscription);
+      setHasKey(data.apiKey?.hasKey || false);
+      if (data.apiKey?.hasKey) {
+        setKeyInfo({
+          label: data.apiKey.label,
+          name: data.apiKey.name,
+          isActive: data.apiKey.isActive,
+          creditLimit: data.apiKey.creditLimit,
+          createdAt: data.apiKey.createdAt,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -52,12 +90,10 @@ export default function ApiKeyPage() {
   }, []);
 
   useEffect(() => {
-    if (isLoaded && hasPlan) {
-      fetchKeyStatus();
-    } else if (isLoaded) {
-      setLoading(false);
+    if (isLoaded) {
+      fetchStatus();
     }
-  }, [isLoaded, hasPlan, fetchKeyStatus]);
+  }, [isLoaded, fetchStatus]);
 
   const generateKey = async () => {
     try {
@@ -74,7 +110,7 @@ export default function ApiKeyPage() {
 
       setNewKey(data.apiKey);
       setHasKey(true);
-      await fetchKeyStatus();
+      await fetchStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -108,6 +144,19 @@ export default function ApiKeyPage() {
     }
   };
 
+  const handleManageSubscription = async () => {
+    try {
+      setPortalLoading(true);
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.location.href = data.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setPortalLoading(false);
+    }
+  };
+
   const copyToClipboard = async (text: string) => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
@@ -122,8 +171,8 @@ export default function ApiKeyPage() {
     );
   }
 
-  // User doesn't have a paid plan
-  if (!hasPlan) {
+  // User doesn't have a subscription
+  if (!hasSubscription) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="text-center py-16">
@@ -134,7 +183,7 @@ export default function ApiKeyPage() {
             API Key Access
           </h1>
           <p className="text-gray-400 mb-8 max-w-md mx-auto">
-            Subscribe to a paid plan to get your own OpenRouter API key and
+            Subscribe to the Pro plan to get your own OpenRouter API key and
             unlock AI-powered capabilities.
           </p>
           <Link
@@ -157,10 +206,65 @@ export default function ApiKeyPage() {
         </p>
       </div>
 
+      {/* Checkout success banner */}
+      {checkoutSuccess && (
+        <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-start gap-3">
+          <ShieldCheck className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-emerald-300 text-sm font-medium">
+              Subscription activated!
+            </p>
+            <p className="text-emerald-200/70 text-xs mt-1">
+              Your API key has been automatically generated.
+            </p>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
           <p className="text-red-300 text-sm">{error}</p>
+        </div>
+      )}
+
+      {/* Subscription status card */}
+      {subscription && (
+        <div className="mb-6 p-4 bg-[#1a1a2e] border border-[#2a2a3e] rounded-xl flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Subscription</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-white capitalize">
+                {subscription.tier} Plan
+              </span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                  subscription.status === "active"
+                    ? "bg-emerald-500/10 text-emerald-400"
+                    : "bg-yellow-500/10 text-yellow-400"
+                }`}
+              >
+                {subscription.status}
+              </span>
+            </div>
+            {subscription.cancelAtPeriodEnd && (
+              <p className="text-xs text-yellow-400 mt-1">
+                Cancels at end of period
+              </p>
+            )}
+          </div>
+          <button
+            onClick={handleManageSubscription}
+            disabled={portalLoading}
+            className="flex items-center gap-2 px-3 py-2 bg-[#2a2a3e] hover:bg-[#3a3a4e] text-gray-300 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+          >
+            {portalLoading ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <ExternalLink className="w-3 h-3" />
+            )}
+            Manage
+          </button>
         </div>
       )}
 
@@ -241,20 +345,22 @@ export default function ApiKeyPage() {
 
           <div className="flex items-center justify-between pt-4 border-t border-[#2a2a3e]">
             <p className="text-xs text-gray-500">
-              One key per account. Delete to generate a new one.
+              One key per account. Delete to regenerate.
             </p>
-            <button
-              onClick={deleteKey}
-              disabled={deleting}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              {deleting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              {deleting ? "Revoking..." : "Revoke Key"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={deleteKey}
+                disabled={deleting}
+                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {deleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {deleting ? "Revoking..." : "Revoke Key"}
+              </button>
+            </div>
           </div>
         </div>
       ) : (
@@ -266,9 +372,12 @@ export default function ApiKeyPage() {
             <h3 className="text-lg font-semibold text-white mb-2">
               No API Key Yet
             </h3>
-            <p className="text-gray-400 text-sm mb-6 max-w-sm mx-auto">
-              Generate your OpenRouter API key to start using AI-powered
-              features. You&apos;ll receive one key with a pre-set credit limit.
+            <p className="text-gray-400 text-sm mb-2 max-w-sm mx-auto">
+              Your API key should have been generated automatically with your
+              subscription. If not, click below to generate one.
+            </p>
+            <p className="text-gray-500 text-xs mb-6">
+              You&apos;ll receive one key with a pre-set credit limit.
             </p>
             <button
               onClick={generateKey}
@@ -282,7 +391,7 @@ export default function ApiKeyPage() {
                 </>
               ) : (
                 <>
-                  <Key className="w-4 h-4" />
+                  <RefreshCw className="w-4 h-4" />
                   Generate API Key
                 </>
               )}
@@ -298,15 +407,23 @@ export default function ApiKeyPage() {
         </h4>
         <ul className="text-sm text-gray-500 space-y-1">
           <li>
-            • Use it as the <code className="text-indigo-400">Authorization</code> header:{" "}
+            • Use it as the{" "}
+            <code className="text-indigo-400">Authorization</code> header:{" "}
             <code className="text-indigo-400">Bearer your-key</code>
           </li>
           <li>
             • Base URL:{" "}
-            <code className="text-indigo-400">https://openrouter.ai/api/v1</code>
+            <code className="text-indigo-400">
+              https://openrouter.ai/api/v1
+            </code>
           </li>
           <li>• Compatible with OpenAI SDK — just change the base URL</li>
           <li>• Your key has a credit limit that resets based on your plan</li>
+          <li>
+            • Use the same account in the{" "}
+            <strong className="text-gray-300">Solaris Desktop App</strong> to
+            access AI features
+          </li>
         </ul>
       </div>
     </div>

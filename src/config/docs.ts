@@ -71,6 +71,22 @@ export const DOCS_PAGES = [
     file: "unified-platform-guide.md",
     icon: "Layers",
   },
+  {
+    slug: "terms-of-service",
+    title: "Terms of Service",
+    description: "Legal terms governing your use of Solaris",
+    category: "Legal",
+    file: "terms-of-service.md",
+    icon: "FileText",
+  },
+  {
+    slug: "privacy-policy",
+    title: "Privacy Policy",
+    description: "How we collect, use, and protect your information",
+    category: "Legal",
+    file: "privacy-policy.md",
+    icon: "Shield",
+  },
 ] as const;
 
 export type DocPage = (typeof DOCS_PAGES)[number];

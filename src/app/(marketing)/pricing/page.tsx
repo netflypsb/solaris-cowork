@@ -1,4 +1,4 @@
-import { PricingTable } from "@clerk/nextjs";
+import PricingContent from "./PricingContent";
 
 export const metadata = {
   title: "Pricing - Solaris Cowork",
@@ -18,7 +18,7 @@ export default function PricingPage() {
             capabilities for your projects.
           </p>
         </div>
-        <PricingTable />
+        <PricingContent />
       </div>
     </div>
   );

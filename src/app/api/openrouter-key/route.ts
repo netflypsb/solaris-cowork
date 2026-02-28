@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { getUserSubscription, isSubscriptionActive } from "@/lib/subscription";
 
 const OPENROUTER_KEYS_URL = "https://openrouter.ai/api/v1/keys";
 
@@ -15,14 +16,14 @@ function getManagementKey(): string {
 // GET — Check if the current user already has an API key
 export async function GET() {
   try {
-    const { userId, has } = await auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const hasPlan = has({ feature: "api_access" });
-    if (!hasPlan) {
+    const subscription = await getUserSubscription(userId);
+    if (!isSubscriptionActive(subscription)) {
       return NextResponse.json(
         { error: "Active subscription required" },
         { status: 403 }
@@ -71,14 +72,14 @@ export async function GET() {
 // POST — Generate a new OpenRouter API key for the paid user
 export async function POST() {
   try {
-    const { userId, has } = await auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const hasPlan = has({ feature: "api_access" });
-    if (!hasPlan) {
+    const subscription = await getUserSubscription(userId);
+    if (!isSubscriptionActive(subscription)) {
       return NextResponse.json(
         { error: "Active subscription required" },
         { status: 403 }
@@ -195,14 +196,14 @@ export async function POST() {
 // DELETE — Revoke and delete the user's API key
 export async function DELETE() {
   try {
-    const { userId, has } = await auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const hasPlan = has({ feature: "api_access" });
-    if (!hasPlan) {
+    const subscription = await getUserSubscription(userId);
+    if (!isSubscriptionActive(subscription)) {
       return NextResponse.json(
         { error: "Active subscription required" },
         { status: 403 }

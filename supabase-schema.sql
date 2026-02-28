@@ -99,3 +99,54 @@ CREATE POLICY "Service role full access" ON user_api_keys
 CREATE TRIGGER update_user_api_keys_updated_at
   BEFORE UPDATE ON user_api_keys
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- Stripe subscription tracking
+-- ============================================================
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
+  stripe_customer_id VARCHAR(255) UNIQUE,
+  stripe_subscription_id VARCHAR(255) UNIQUE,
+  stripe_price_id VARCHAR(255),
+  status VARCHAR(50) NOT NULL DEFAULT 'inactive',
+  -- status: active, past_due, canceled, unpaid, incomplete, trialing
+  current_period_start TIMESTAMP WITH TIME ZONE,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  cancel_at_period_end BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_clerk_user_id ON subscriptions(clerk_user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_customer_id ON subscriptions(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_subscription_id ON subscriptions(stripe_subscription_id);
+
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access on subscriptions" ON subscriptions
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER update_subscriptions_updated_at
+  BEFORE UPDATE ON subscriptions
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- Desktop app session tokens
+-- ============================================================
+CREATE TABLE IF NOT EXISTS desktop_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
+  token_hash VARCHAR(255) NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_desktop_sessions_clerk_user_id ON desktop_sessions(clerk_user_id);
+CREATE INDEX IF NOT EXISTS idx_desktop_sessions_token_hash ON desktop_sessions(token_hash);
+
+ALTER TABLE desktop_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Service role full access on desktop_sessions" ON desktop_sessions
+  FOR ALL USING (true) WITH CHECK (true);
