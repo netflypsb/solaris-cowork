@@ -34,6 +34,12 @@ export default async function ProtectedLayout({
               Dashboard
             </Link>
             <Link
+              href="/dashboard/api-key"
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              API Key
+            </Link>
+            <Link
               href="/docs"
               className="text-sm text-gray-400 hover:text-white transition-colors"
             >

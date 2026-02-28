@@ -72,3 +72,30 @@ CREATE TRIGGER update_contact_messages_updated_at
 CREATE TRIGGER update_user_profiles_updated_at 
   BEFORE UPDATE ON user_profiles 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- OpenRouter API keys provisioned for paid users (one per user)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_api_keys (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
+  openrouter_key_hash VARCHAR(255) NOT NULL,
+  openrouter_key_label VARCHAR(255),
+  key_name VARCHAR(255) NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  credit_limit NUMERIC,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_api_keys_clerk_user_id ON user_api_keys(clerk_user_id);
+
+ALTER TABLE user_api_keys ENABLE ROW LEVEL SECURITY;
+
+-- All access goes through server-side API routes using service_role key
+CREATE POLICY "Service role full access" ON user_api_keys
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER update_user_api_keys_updated_at
+  BEFORE UPDATE ON user_api_keys
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
