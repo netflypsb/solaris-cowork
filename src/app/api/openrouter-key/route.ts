@@ -103,7 +103,7 @@ export async function POST() {
     const managementKey = getManagementKey();
     const keyName = `solaris-user-${userId.slice(0, 8)}`;
 
-    const orResponse = await fetch(`${OPENROUTER_KEYS_URL}/`, {
+    const orResponse = await fetch(OPENROUTER_KEYS_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${managementKey}`,
@@ -111,15 +111,22 @@ export async function POST() {
       },
       body: JSON.stringify({
         name: keyName,
-        limit: 10, // $10 credit limit per key — adjust as needed
+        limit: 7, // $7 credit limit per key (your business margin)
       }),
     });
 
     if (!orResponse.ok) {
       const errBody = await orResponse.text();
-      console.error("OpenRouter API error:", orResponse.status, errBody);
+      console.error("OpenRouter API error:", {
+        status: orResponse.status,
+        statusText: orResponse.statusText,
+        body: errBody,
+        url: OPENROUTER_KEYS_URL,
+        managementKeyPresent: !!managementKey,
+        managementKeyPrefix: managementKey.slice(0, 10) + "..."
+      });
       return NextResponse.json(
-        { error: "Failed to create API key with OpenRouter" },
+        { error: "Failed to create API key with OpenRouter", details: errBody },
         { status: 502 }
       );
     }
@@ -149,7 +156,7 @@ export async function POST() {
         openrouter_key_label: keyLabel || null,
         key_name: keyName,
         is_active: true,
-        credit_limit: 10,
+        credit_limit: 7,
       });
 
     if (insertError) {
