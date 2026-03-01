@@ -133,21 +133,37 @@ CREATE TRIGGER update_subscriptions_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
--- Desktop app session tokens
+-- Desktop app one-time auth tokens
 -- ============================================================
-CREATE TABLE IF NOT EXISTS desktop_sessions (
+CREATE TABLE IF NOT EXISTS desktop_auth_tokens (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
-  token_hash VARCHAR(255) NOT NULL,
+  clerk_user_id TEXT NOT NULL,
+  token TEXT NOT NULL UNIQUE,
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  used_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  ip_address TEXT,
+  user_agent TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_desktop_sessions_clerk_user_id ON desktop_sessions(clerk_user_id);
-CREATE INDEX IF NOT EXISTS idx_desktop_sessions_token_hash ON desktop_sessions(token_hash);
+CREATE INDEX IF NOT EXISTS idx_desktop_auth_tokens_token ON desktop_auth_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_desktop_auth_tokens_expires ON desktop_auth_tokens(expires_at);
 
-ALTER TABLE desktop_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE desktop_auth_tokens ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Service role full access on desktop_sessions" ON desktop_sessions
+CREATE POLICY "Service role full access on desktop_auth_tokens" ON desktop_auth_tokens
   FOR ALL USING (true) WITH CHECK (true);
+
+-- Function to delete expired/used tokens older than 1 hour
+CREATE OR REPLACE FUNCTION cleanup_desktop_auth_tokens()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM desktop_auth_tokens
+  WHERE expires_at < now() - INTERVAL '1 hour'
+     OR used_at IS NOT NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Cron job to run cleanup every 30 minutes (requires pg_cron extension)
+-- Run this manually in Supabase SQL editor:
+-- SELECT cron.schedule('cleanup-desktop-tokens', '*/30 * * * *', 'SELECT cleanup_desktop_auth_tokens();');

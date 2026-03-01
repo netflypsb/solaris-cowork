@@ -1,76 +1,86 @@
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-import { getUserSubscription, isSubscriptionActive } from "@/lib/subscription";
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { getUserSubscription, isSubscriptionActive } from "@/lib/subscription";
 
-// Verify a desktop token and return session info + OpenRouter key
-// This is the primary endpoint the desktop app uses after authentication
+// Verify a one-time desktop token and return user data + API key
+// Called by the desktop app after receiving the token via deep link
 export async function POST(req: NextRequest) {
   try {
     const { token } = await req.json();
 
-    if (!token) {
-      return NextResponse.json({ error: "Token required" }, { status: 400 });
+    if (!token || typeof token !== "string") {
+      return NextResponse.json({ error: "Missing token" }, { status: 400 });
     }
 
-    // Parse token
-    const parts = token.split(".");
-    if (parts.length !== 2) {
-      return NextResponse.json({ error: "Invalid token format" }, { status: 401 });
+    // 1. Look up the token in the database
+    const { data: tokenRecord, error: tokenError } = await supabaseAdmin
+      .from("desktop_auth_tokens")
+      .select("*")
+      .eq("token", token)
+      .is("used_at", null)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (tokenError || !tokenRecord) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 }
+      );
     }
 
-    const [payloadStr, signature] = parts;
+    // 2. Mark token as used (one-time use)
+    await supabaseAdmin
+      .from("desktop_auth_tokens")
+      .update({ used_at: new Date().toISOString() })
+      .eq("id", tokenRecord.id);
 
-    // Verify signature
-    const secret = process.env.DESKTOP_AUTH_SECRET || process.env.CLERK_SECRET_KEY!;
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payloadStr)
-      .digest("base64url");
+    const userId = tokenRecord.clerk_user_id;
 
-    if (signature !== expectedSignature) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    // 3. Get user info from Clerk
+    let email = "";
+    try {
+      const clerk = await clerkClient();
+      const user = await clerk.users.getUser(userId);
+      email = user.emailAddresses?.[0]?.emailAddress || "";
+    } catch (err) {
+      console.error("[Verify Token] Error fetching Clerk user:", err);
     }
 
-    // Parse payload
-    const payload = JSON.parse(
-      Buffer.from(payloadStr, "base64url").toString("utf-8")
-    );
+    // 4. Get subscription status
+    const subscription = await getUserSubscription(userId);
+    const hasSubscription = isSubscriptionActive(subscription);
 
-    // Check expiry
-    if (payload.exp < Math.floor(Date.now() / 1000)) {
-      return NextResponse.json({ error: "Token expired" }, { status: 401 });
-    }
-
-    // Get subscription status
-    const subscription = await getUserSubscription(payload.sub);
-    const active = isSubscriptionActive(subscription);
-
-    // Get OpenRouter API key if subscription is active
+    // 5. Get OpenRouter API key if subscription is active
     let apiKey = null;
-    if (active) {
+    if (hasSubscription) {
       const { data: keyData } = await supabaseAdmin
         .from("user_api_keys")
-        .select("openrouter_key_full, openrouter_key_label, key_name, is_active, credit_limit")
-        .eq("clerk_user_id", payload.sub)
+        .select(
+          "openrouter_key_full, openrouter_key_label, key_name, credit_limit"
+        )
+        .eq("clerk_user_id", userId)
         .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .single();
 
       if (keyData) {
         apiKey = {
           key: keyData.openrouter_key_full,
-          label: keyData.openrouter_key_label,
-          name: keyData.key_name,
-          creditLimit: keyData.credit_limit,
+          label: keyData.openrouter_key_label || "Solaris Key",
+          name: keyData.key_name || "OpenRouter",
+          creditLimit: keyData.credit_limit || 0,
         };
       }
     }
 
+    // 6. Return everything the desktop app needs in a single response
     return NextResponse.json({
       valid: true,
-      userId: payload.sub,
-      email: payload.email,
-      hasSubscription: active,
+      userId,
+      email,
+      hasSubscription,
       subscription: subscription
         ? {
             status: subscription.status,
@@ -81,11 +91,11 @@ export async function POST(req: NextRequest) {
         : null,
       apiKey,
     });
-  } catch (err) {
-    console.error("Token verification error:", err);
+  } catch (error) {
+    console.error("[Verify Token] Error:", error);
     return NextResponse.json(
-      { error: "Invalid token" },
-      { status: 401 }
+      { error: "Internal server error" },
+      { status: 500 }
     );
   }
 }

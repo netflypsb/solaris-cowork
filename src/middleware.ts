@@ -8,6 +8,7 @@ const isProtectedRoute = createRouteMatcher([
   "/api/stripe/checkout(.*)",
   "/api/stripe/portal(.*)",
   "/api/user/(.*)",
+  "/api/auth/generate-desktop-token(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
