@@ -24,9 +24,14 @@ Users do NOT create API keys manually. Keys are created automatically when they 
 ```
 Desktop App
   ├── Clerk Auth (Electron/Tauri browser window or deep link)
-  │     └── Opens https://solaris-ai.xyz/sign-in?redirect=solaris://auth/callback
-  │           └── Clerk session token returned
-  ├── Subscription Check
+  │     └── Opens https://solaris-ai.xyz/auth/desktop
+  │           └── User signs in → gets custom desktop token (5 min expiry)
+  │           └── Deep link: solaris://auth/callback?token=<custom-token>
+  ├── Token Verification
+  │     └── POST https://solaris-ai.xyz/api/auth/verify-desktop-token
+  │           Body: { "token": "<custom-token>" }
+  │           Returns: { valid: true, userId, email, hasSubscription }
+  ├── Subscription & Key Fetch
   │     └── GET https://solaris-ai.xyz/api/user/subscription
   │           Headers: { Authorization: Bearer <clerk-session-token> }
   │           Returns: { hasSubscription, subscription, apiKey }
