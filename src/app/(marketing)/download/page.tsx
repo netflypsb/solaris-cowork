@@ -14,6 +14,18 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.15 } },
 };
 
+interface Release {
+  tag_name: string;
+  name: string;
+  published_at: string;
+  installer: {
+    name: string;
+    download_url: string;
+    size: number;
+    updated_at: string;
+  } | null;
+}
+
 interface InstallerInfo {
   url: string;
   downloadUrl: string;
@@ -24,28 +36,33 @@ interface InstallerInfo {
 }
 
 export default function DownloadPage() {
-  const [installer, setInstaller] = useState<InstallerInfo | null>(null);
+  const [releases, setReleases] = useState<Release[]>([]);
+  const [selectedRelease, setSelectedRelease] = useState<Release | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchInstaller() {
+    async function fetchReleases() {
       try {
-        const response = await fetch('/api/installer');
+        const response = await fetch('/api/releases');
         if (!response.ok) {
-          throw new Error('Failed to fetch installer');
+          throw new Error('Failed to fetch releases');
         }
         const data = await response.json();
-        setInstaller(data);
+        setReleases(data);
+        // Select the first (latest) release by default
+        if (data.length > 0) {
+          setSelectedRelease(data[0]);
+        }
       } catch (err) {
-        setError('Installer not available. Please try again later.');
-        console.error('Error fetching installer:', err);
+        setError('Failed to load releases. Please try again later.');
+        console.error('Error fetching releases:', err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchInstaller();
+    fetchReleases();
   }, []);
 
   const formatSize = (bytes: number) => {
@@ -94,15 +111,38 @@ export default function DownloadPage() {
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-sm text-gray-400">Version</span>
                 <span className="text-sm text-white font-medium">
-                  {installer?.version || 'v0.1.3'}
+                  {selectedRelease?.tag_name || 'v0.1.3'}
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mb-6">
                 <span className="text-sm text-gray-400">Size</span>
                 <span className="text-sm text-white font-medium">
-                  {loading ? 'Loading...' : installer ? formatSize(installer.size) : '~188 MB'}
+                  {loading ? 'Loading...' : selectedRelease?.installer ? formatSize(selectedRelease.installer.size) : '~188 MB'}
                 </span>
               </div>
+
+              {/* Version Selector */}
+              {releases.length > 1 && (
+                <div className="mb-4">
+                  <label className="text-sm text-gray-400 block mb-2">
+                    Select Version:
+                  </label>
+                  <select
+                    value={selectedRelease?.tag_name || ''}
+                    onChange={(e) => {
+                      const release = releases.find(r => r.tag_name === e.target.value);
+                      setSelectedRelease(release || null);
+                    }}
+                    className="w-full px-3 py-2 bg-surface border border-border rounded-lg text-sm text-white focus:outline-none focus:border-primary"
+                  >
+                    {releases.map((release) => (
+                      <option key={release.tag_name} value={release.tag_name}>
+                        {release.tag_name} {release.tag_name === releases[0]?.tag_name ? '(Latest)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {loading ? (
                 <button
@@ -116,9 +156,9 @@ export default function DownloadPage() {
                 <div className="text-center py-3">
                   <p className="text-sm text-red-400">{error}</p>
                 </div>
-              ) : installer ? (
+              ) : selectedRelease?.installer ? (
                 <a
-                  href={installer.downloadUrl}
+                  href={selectedRelease.installer.download_url}
                   download
                   className="flex items-center justify-center gap-2 w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-lg font-medium transition-colors text-sm"
                 >
