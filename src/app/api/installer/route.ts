@@ -31,7 +31,7 @@ export async function GET() {
     
     // Find the installer asset
     const installerAsset = release.assets.find((asset: GitHubAsset) => 
-      asset.name.includes('Solaris.Cowork.Setup') && asset.name.endsWith('.exe')
+      asset.name.includes('Solaris Cowork Setup') && asset.name.endsWith('.exe')
     );
     
     if (!installerAsset) {
