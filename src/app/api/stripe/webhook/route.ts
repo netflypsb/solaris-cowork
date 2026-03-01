@@ -59,19 +59,21 @@ async function provisionOpenRouterKey(clerkUserId: string): Promise<void> {
   const orData = await orResponse.json();
   const keyHash = orData.data?.hash || orData.hash;
   const keyLabel = orData.data?.label || orData.label;
+  const keyFull = orData.data?.key || orData.key;
 
   if (!keyHash) {
     console.error("Unexpected OpenRouter response:", orData);
     throw new Error("Unexpected response from OpenRouter");
   }
 
-  // Store key metadata in Supabase
+  // Store key metadata in Supabase (including full key for desktop app retrieval)
   const { error: insertError } = await supabaseAdmin
     .from("user_api_keys")
     .insert({
       clerk_user_id: clerkUserId,
       openrouter_key_hash: keyHash,
       openrouter_key_label: keyLabel || null,
+      openrouter_key_full: keyFull || null,
       key_name: keyName,
       is_active: true,
       credit_limit: 7,

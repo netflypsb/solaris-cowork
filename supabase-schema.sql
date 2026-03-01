@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS user_api_keys (
   clerk_user_id VARCHAR(255) UNIQUE NOT NULL,
   openrouter_key_hash VARCHAR(255) NOT NULL,
   openrouter_key_label VARCHAR(255),
+  openrouter_key_full TEXT,
   key_name VARCHAR(255) NOT NULL,
   is_active BOOLEAN DEFAULT true,
   credit_limit NUMERIC,
