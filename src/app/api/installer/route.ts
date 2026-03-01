@@ -18,19 +18,30 @@ interface GitHubRelease {
 
 export async function GET() {
   try {
-    // Get the latest release from GitHub
+    // Fetch all releases and find v0.1.3 specifically
     const response = await fetch(
-      'https://api.github.com/repos/netflypsb/solaris-cowork/releases/latest'
+      'https://api.github.com/repos/netflypsb/solaris-cowork/releases',
+      { next: { revalidate: 0 } } // No cache
     );
     
     if (!response.ok) {
-      throw new Error('Failed to fetch GitHub release');
+      throw new Error('Failed to fetch GitHub releases');
     }
     
-    const release: GitHubRelease = await response.json();
+    const releases: GitHubRelease[] = await response.json();
+    
+    // Find v0.1.3 release specifically
+    const release = releases.find(r => r.tag_name === 'v0.1.3') || releases[0];
+    
+    if (!release) {
+      return NextResponse.json(
+        { error: 'No releases found' },
+        { status: 404 }
+      );
+    }
     
     // Debug: log all assets
-    console.log('Release assets:', release.assets.map(a => ({ name: a.name, size: a.size })));
+    console.log('Release:', release.tag_name, 'Assets:', release.assets.map(a => a.name));
     
     // Find the installer asset
     const installerAsset = release.assets.find((asset: GitHubAsset) => 
