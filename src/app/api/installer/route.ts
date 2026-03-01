@@ -29,14 +29,17 @@ export async function GET() {
     
     const release: GitHubRelease = await response.json();
     
+    // Debug: log all assets
+    console.log('Release assets:', release.assets.map(a => ({ name: a.name, size: a.size })));
+    
     // Find the installer asset
     const installerAsset = release.assets.find((asset: GitHubAsset) => 
-      asset.name.includes('Solaris Cowork Setup') && asset.name.endsWith('.exe')
+      asset.name.includes('Solaris.Cowork.Setup') && asset.name.endsWith('.exe')
     );
     
     if (!installerAsset) {
       return NextResponse.json(
-        { error: 'Installer not found in GitHub release' },
+        { error: 'Installer not found in GitHub release', assets: release.assets.map(a => a.name) },
         { status: 404 }
       );
     }
