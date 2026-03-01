@@ -94,7 +94,7 @@ export default function DownloadPage() {
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-sm text-gray-400">Version</span>
                 <span className="text-sm text-white font-medium">
-                  {installer?.version || 'v0.1.2'}
+                  {installer?.version || 'v0.1.3'}
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mb-6">

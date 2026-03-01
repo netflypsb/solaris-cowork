@@ -13,8 +13,8 @@ const footerLinks = {
     { href: "/about", label: "About" },
   ],
   Community: [
-    { href: "https://github.com/solaris-cowork", label: "GitHub" },
-    { href: "https://discord.gg/solaris", label: "Discord" },
+    { href: "https://github.com/netflypsb", label: "GitHub" },
+    { href: "https://www.youtube.com/@netflyp", label: "YouTube" },
     { href: "mailto:solaris-app@outlook.com", label: "Contact" },
   ],
 };
@@ -40,7 +40,7 @@ export default function Footer() {
             </p>
             <div className="flex gap-4 mt-4">
               <a
-                href="https://github.com/solaris-cowork"
+                href="https://github.com/netflypsb"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-white transition-colors text-sm"
@@ -48,20 +48,12 @@ export default function Footer() {
                 GitHub
               </a>
               <a
-                href="https://twitter.com/solaris_cowork"
+                href="https://www.youtube.com/@netflyp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-white transition-colors text-sm"
               >
-                Twitter
-              </a>
-              <a
-                href="https://discord.gg/solaris"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-white transition-colors text-sm"
-              >
-                Discord
+                YouTube
               </a>
             </div>
           </div>

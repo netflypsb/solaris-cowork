@@ -618,8 +618,8 @@ export default function LandingPage() {
                   <h3 className="text-2xl font-bold text-white mb-2">
                     Solaris for Windows
                   </h3>
-                  <p className="text-gray-400 mb-1">Version 0.1.2 • Windows 10/11 (64-bit)</p>
-                  <p className="text-sm text-gray-500">~188 MB installer</p>
+                  <p className="text-gray-400 mb-1">Version 0.1.3 • Windows 10/11 (64-bit)</p>
+                  <p className="text-sm text-gray-500">~202 MB installer</p>
                 </div>
                 <Link
                   href="/download"

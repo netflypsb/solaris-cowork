@@ -89,9 +89,9 @@ function PricingContentInner() {
   };
 
   const features = [
-    "Personal OpenRouter API key",
-    "Access to all AI models",
-    "$7 monthly credit included",
+    ">100 AI models",
+    "BYOK (Bring Your Own Key)",
+    "Multiple AI Providers",
     "Desktop app access",
     "Priority support",
     "Key management dashboard",
@@ -134,7 +134,7 @@ function PricingContentInner() {
               <span className="text-gray-400">/month</span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              Everything you need to build with AI
+              One AI to replace all your apps
             </p>
           </div>
 

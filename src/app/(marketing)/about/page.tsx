@@ -179,7 +179,7 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-wrap gap-4">
               <a
-                href="https://github.com/solaris-cowork"
+                href="https://github.com/netflypsb"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface border border-border hover:border-primary/50 rounded-lg text-sm text-white transition-colors"
@@ -188,13 +188,13 @@ export default function AboutPage() {
                 GitHub Repository
               </a>
               <a
-                href="https://discord.gg/solaris"
+                href="https://www.youtube.com/@netflyp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface border border-border hover:border-primary/50 rounded-lg text-sm text-white transition-colors"
               >
                 <MessageCircle size={18} />
-                Community Discord
+                YouTube Channel
               </a>
             </div>
           </motion.section>
@@ -207,10 +207,10 @@ export default function AboutPage() {
                 <div className="flex items-center gap-2">
                   <Mail size={16} className="text-primary" />
                   <a
-                    href="mailto:support@solaris-ai.xyz"
+                    href="mailto:solaris-app@outlook.com"
                     className="text-primary hover:text-primary-hover transition-colors"
                   >
-                    support@solaris-ai.xyz
+                    solaris-app@outlook.com
                   </a>
                 </div>
                 <div className="flex items-center gap-2">
@@ -218,7 +218,7 @@ export default function AboutPage() {
                   <span>
                     Bug reports via{" "}
                     <a
-                      href="https://github.com/solaris-cowork/issues"
+                      href="https://github.com/netflypsb/solaris-cowork/issues"
                       className="text-primary hover:text-primary-hover transition-colors"
                     >
                       GitHub Issues
