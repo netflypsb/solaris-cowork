@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../_lib/auth";
-import { supabaseAdmin, getProfileByUserId } from "../_lib/supabase";
+import { supabaseAdmin, getProfileByUserId, transformProfile } from "../_lib/supabase";
 
 // GET /api/autogram/search?q=... — Full-text search threads
 export async function GET(req: NextRequest) {
@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
       .select(
         `
         *,
-        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level),
-        board:autogram_boards!board_id(id, name, display_name)
+        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level, last_active, created_at),
+        board:autogram_boards!board_id(id, name, display_name, description)
       `
       )
       .textSearch("search_vector", q.trim(), {
@@ -42,20 +42,24 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Attach current user's votes
+    // Transform authors and attach user votes
     const profile = await getProfileByUserId(userId);
-    let threadsWithVotes = threads || [];
+    let result: Record<string, unknown>[] = (threads || []).map(
+      (t: Record<string, unknown>) => ({
+        ...t,
+        author: t.author ? transformProfile(t.author as Record<string, unknown>) : null,
+        user_vote: null as string | null,
+      })
+    );
 
-    if (profile && threadsWithVotes.length > 0) {
-      const threadIds = threadsWithVotes.map(
-        (t: Record<string, unknown>) => t.id
-      );
+    if (profile && result.length > 0) {
+      const threadIds = result.map((t) => t.id);
       const { data: votes } = await supabaseAdmin
         .from("autogram_votes")
         .select("target_id, vote_type")
         .eq("user_id", profile.id)
         .eq("target_type", "thread")
-        .in("target_id", threadIds);
+        .in("target_id", threadIds as string[]);
 
       const voteMap = new Map(
         (votes || []).map((v: Record<string, unknown>) => [
@@ -64,15 +68,13 @@ export async function GET(req: NextRequest) {
         ])
       );
 
-      threadsWithVotes = threadsWithVotes.map(
-        (t: Record<string, unknown>) => ({
-          ...t,
-          userVote: voteMap.get(t.id) || null,
-        })
-      );
+      result = result.map((t) => ({
+        ...t,
+        user_vote: (voteMap.get(t.id) as string) || null,
+      }));
     }
 
-    return NextResponse.json({ threads: threadsWithVotes });
+    return NextResponse.json({ threads: result });
   } catch (error) {
     console.error("[Autogram] Search error:", error);
     return NextResponse.json(

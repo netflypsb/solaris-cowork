@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../_lib/auth";
-import { supabaseAdmin, getProfileByUserId } from "../_lib/supabase";
+import { supabaseAdmin, getProfileByUserId, transformProfile } from "../_lib/supabase";
 import { checkThreadRateLimit } from "../_lib/rate-limit";
 
 // GET /api/autogram/threads — Feed with pagination
@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
       .select(
         `
         *,
-        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level),
-        board:autogram_boards!board_id(id, name, display_name)
+        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level, last_active, created_at),
+        board:autogram_boards!board_id(id, name, display_name, description)
       `
       )
       .limit(limit);
@@ -76,34 +76,39 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Attach current user's votes if profile exists
-    let threadsWithVotes = threads || [];
-    if (profile && threadsWithVotes.length > 0) {
-      const threadIds = threadsWithVotes.map((t: Record<string, unknown>) => t.id);
+    // Transform authors and attach user votes
+    let result: Record<string, unknown>[] = (threads || []).map((t: Record<string, unknown>) => ({
+      ...t,
+      author: t.author ? transformProfile(t.author as Record<string, unknown>) : null,
+      user_vote: null as string | null,
+    }));
+
+    if (profile && result.length > 0) {
+      const threadIds = result.map((t) => t.id);
       const { data: votes } = await supabaseAdmin
         .from("autogram_votes")
         .select("target_id, vote_type")
         .eq("user_id", profile.id)
         .eq("target_type", "thread")
-        .in("target_id", threadIds);
+        .in("target_id", threadIds as string[]);
 
       const voteMap = new Map(
         (votes || []).map((v: Record<string, unknown>) => [v.target_id, v.vote_type])
       );
 
-      threadsWithVotes = threadsWithVotes.map((t: Record<string, unknown>) => ({
+      result = result.map((t) => ({
         ...t,
-        userVote: voteMap.get(t.id) || null,
+        user_vote: (voteMap.get(t.id) as string) || null,
       }));
     }
 
     // Determine next cursor
     const nextCursor =
-      threadsWithVotes.length === limit
-        ? (threadsWithVotes[threadsWithVotes.length - 1] as Record<string, unknown>).created_at
+      result.length === limit
+        ? result[result.length - 1].created_at
         : null;
 
-    return NextResponse.json({ threads: threadsWithVotes, nextCursor });
+    return NextResponse.json({ threads: result, nextCursor });
   } catch (error) {
     console.error("[Autogram] Get feed error:", error);
     return NextResponse.json(
@@ -139,7 +144,13 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, content, boardId, threadType, tags, metadata } = body;
+    // Accept both snake_case (desktop) and camelCase field names
+    const title = body.title;
+    const content = body.content;
+    const boardId = body.board_id || body.boardId;
+    const threadType = body.thread_type || body.threadType;
+    const tags = body.tags;
+    const metadata = body.metadata;
 
     // Validate
     if (!title || title.trim().length === 0) {
@@ -191,8 +202,8 @@ export async function POST(req: Request) {
       .select(
         `
         *,
-        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level),
-        board:autogram_boards!board_id(id, name, display_name)
+        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level, last_active, created_at),
+        board:autogram_boards!board_id(id, name, display_name, description)
       `
       )
       .single();
@@ -211,7 +222,13 @@ export async function POST(req: Request) {
       .update({ last_active: new Date().toISOString() })
       .eq("id", profile.id);
 
-    return NextResponse.json({ thread }, { status: 201 });
+    const result = {
+      ...thread,
+      author: thread.author ? transformProfile(thread.author as Record<string, unknown>) : null,
+      user_vote: null,
+    };
+
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("[Autogram] Create thread error:", error);
     return NextResponse.json(

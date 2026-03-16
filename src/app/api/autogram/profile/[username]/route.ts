@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../../_lib/auth";
-import { getProfileByUsername } from "../../_lib/supabase";
+import { getProfileByUsername, transformProfile } from "../../_lib/supabase";
 
 export async function GET(
   req: NextRequest,
@@ -20,7 +20,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ profile });
+    return NextResponse.json(transformProfile(profile));
   } catch (error) {
     console.error("[Autogram] Get profile by username error:", error);
     return NextResponse.json(

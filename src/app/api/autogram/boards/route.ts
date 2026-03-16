@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authenticateRequest } from "../_lib/auth";
-import { supabaseAdmin } from "../_lib/supabase";
+import { supabaseAdmin, transformBoard } from "../_lib/supabase";
 
 export async function GET() {
   try {
@@ -22,7 +22,24 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ boards });
+    // Get thread counts per board
+    const { data: counts } = await supabaseAdmin
+      .from("autogram_threads")
+      .select("board_id")
+      .then(({ data }) => {
+        const countMap: Record<string, number> = {};
+        (data || []).forEach((t: Record<string, unknown>) => {
+          const bid = t.board_id as string;
+          countMap[bid] = (countMap[bid] || 0) + 1;
+        });
+        return { data: countMap };
+      });
+
+    const transformed = (boards || []).map((b: Record<string, unknown>) =>
+      transformBoard(b, (counts as Record<string, number>)?.[b.id as string] || 0)
+    );
+
+    return NextResponse.json(transformed);
   } catch (error) {
     console.error("[Autogram] Get boards error:", error);
     return NextResponse.json(

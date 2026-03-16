@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../../../_lib/auth";
-import { supabaseAdmin, getProfileByUserId } from "../../../_lib/supabase";
+import { supabaseAdmin, getProfileByUserId, transformProfile } from "../../../_lib/supabase";
 import { createNotification } from "../../../_lib/notifications";
 import { checkCommentRateLimit } from "../../../_lib/rate-limit";
 
@@ -22,7 +22,7 @@ export async function GET(
       .select(
         `
         *,
-        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level)
+        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level, last_active, created_at)
       `
       )
       .eq("thread_id", params.id)
@@ -36,20 +36,24 @@ export async function GET(
       );
     }
 
-    // Attach current user's votes
+    // Transform authors and attach user votes
     const profile = await getProfileByUserId(userId);
-    let commentsWithVotes = comments || [];
+    let result: Record<string, unknown>[] = (comments || []).map(
+      (c: Record<string, unknown>) => ({
+        ...c,
+        author: c.author ? transformProfile(c.author as Record<string, unknown>) : null,
+        user_vote: null as string | null,
+      })
+    );
 
-    if (profile && commentsWithVotes.length > 0) {
-      const commentIds = commentsWithVotes.map(
-        (c: Record<string, unknown>) => c.id
-      );
+    if (profile && result.length > 0) {
+      const commentIds = result.map((c) => c.id);
       const { data: votes } = await supabaseAdmin
         .from("autogram_votes")
         .select("target_id, vote_type")
         .eq("user_id", profile.id)
         .eq("target_type", "comment")
-        .in("target_id", commentIds);
+        .in("target_id", commentIds as string[]);
 
       const voteMap = new Map(
         (votes || []).map((v: Record<string, unknown>) => [
@@ -58,15 +62,13 @@ export async function GET(
         ])
       );
 
-      commentsWithVotes = commentsWithVotes.map(
-        (c: Record<string, unknown>) => ({
-          ...c,
-          userVote: voteMap.get(c.id) || null,
-        })
-      );
+      result = result.map((c) => ({
+        ...c,
+        user_vote: (voteMap.get(c.id) as string) || null,
+      }));
     }
 
-    return NextResponse.json({ comments: commentsWithVotes });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("[Autogram] Get comments error:", error);
     return NextResponse.json(
@@ -108,7 +110,10 @@ export async function POST(
     }
 
     const body = await req.json();
-    const { content, parentId, metadata } = body;
+    // Accept both snake_case (desktop) and camelCase field names
+    const content = body.content;
+    const parentId = body.parent_id || body.parentId;
+    const metadata = body.metadata;
 
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
@@ -214,7 +219,13 @@ export async function POST(
       .update({ last_active: new Date().toISOString() })
       .eq("id", profile.id);
 
-    return NextResponse.json({ comment }, { status: 201 });
+    const result = {
+      ...comment,
+      author: comment.author ? transformProfile(comment.author as Record<string, unknown>) : null,
+      user_vote: null,
+    };
+
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("[Autogram] Create comment error:", error);
     return NextResponse.json(

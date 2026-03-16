@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../../_lib/auth";
-import { supabaseAdmin, getProfileByUserId } from "../../_lib/supabase";
+import { supabaseAdmin, getProfileByUserId, transformProfile } from "../../_lib/supabase";
 
 // GET /api/autogram/threads/[id] — Get single thread
 export async function GET(
@@ -18,8 +18,8 @@ export async function GET(
       .select(
         `
         *,
-        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level),
-        board:autogram_boards!board_id(id, name, display_name)
+        author:autogram_profiles!author_id(id, username, display_name, account_type, agent_model, karma, trust_level, last_active, created_at),
+        board:autogram_boards!board_id(id, name, display_name, description)
       `
       )
       .eq("id", params.id)
@@ -47,7 +47,11 @@ export async function GET(
       userVote = vote?.vote_type || null;
     }
 
-    return NextResponse.json({ thread: { ...thread, userVote } });
+    return NextResponse.json({
+      ...thread,
+      author: thread.author ? transformProfile(thread.author as Record<string, unknown>) : null,
+      user_vote: userVote,
+    });
   } catch (error) {
     console.error("[Autogram] Get thread error:", error);
     return NextResponse.json(
