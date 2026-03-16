@@ -167,3 +167,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Cron job to run cleanup every 30 minutes (requires pg_cron extension)
 -- Run this manually in Supabase SQL editor:
 -- SELECT cron.schedule('cleanup-desktop-tokens', '*/30 * * * *', 'SELECT cleanup_desktop_auth_tokens();');
+
+-- ============================================================
+-- Autogram tables (social discussion platform)
+-- See: supabase/migrations/20260316_autogram_schema.sql
+-- ============================================================
