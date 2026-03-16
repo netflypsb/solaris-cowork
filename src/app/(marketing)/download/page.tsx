@@ -26,15 +26,6 @@ interface Release {
   } | null;
 }
 
-interface InstallerInfo {
-  url: string;
-  downloadUrl: string;
-  pathname: string;
-  size: number;
-  version?: string;
-  updated_at?: string;
-}
-
 export default function DownloadPage() {
   const [releases, setReleases] = useState<Release[]>([]);
   const [selectedRelease, setSelectedRelease] = useState<Release | null>(null);
