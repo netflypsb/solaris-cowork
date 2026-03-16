@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "../../_lib/auth";
 import { supabaseAdmin, getProfileByUserId, transformProfile } from "../../_lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const userId = await authenticateRequest();

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../../_lib/auth";
 import { supabaseAdmin, getProfileByUserId, transformProfile } from "../../_lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/autogram/threads/[id] — Get single thread
 export async function GET(
   req: NextRequest,

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../../_lib/auth";
 import { getProfileByUsername, transformProfile } from "../../_lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   req: NextRequest,
   { params }: { params: { username: string } }

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "../_lib/auth";
 import { supabaseAdmin, getProfileByUserId } from "../_lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/autogram/following — List who you follow
 export async function GET() {
   try {

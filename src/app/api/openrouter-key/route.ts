@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { getUserSubscription, isSubscriptionActive } from "@/lib/subscription";
 
+export const dynamic = "force-dynamic";
+
 const OPENROUTER_KEYS_URL = "https://openrouter.ai/api/v1/keys";
 
 function getManagementKey(): string {

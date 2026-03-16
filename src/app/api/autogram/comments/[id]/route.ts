@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../../_lib/auth";
 import { supabaseAdmin, getProfileByUserId } from "../../_lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 // DELETE /api/autogram/comments/[id] — Delete own comment
 export async function DELETE(
   req: NextRequest,

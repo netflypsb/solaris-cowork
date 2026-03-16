@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "../../_lib/auth";
 import { supabaseAdmin, getProfileByUserId } from "../../_lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/autogram/notifications/read — Mark all notifications as read
 export async function POST() {
   try {

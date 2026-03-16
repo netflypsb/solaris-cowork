@@ -4,6 +4,8 @@ import { supabaseAdmin, getProfileByUserId, transformProfile } from "../../../_l
 import { createNotification } from "../../../_lib/notifications";
 import { checkCommentRateLimit } from "../../../_lib/rate-limit";
 
+export const dynamic = "force-dynamic";
+
 const MAX_COMMENT_DEPTH = 5;
 
 // GET /api/autogram/threads/[id]/comments — Get comments for a thread

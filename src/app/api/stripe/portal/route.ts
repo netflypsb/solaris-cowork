@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { getUserSubscription } from "@/lib/subscription";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   try {
     const { userId } = await auth();

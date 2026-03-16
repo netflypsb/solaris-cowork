@@ -3,6 +3,8 @@ import { authenticateRequest } from "../_lib/auth";
 import { supabaseAdmin, getProfileByUserId } from "../_lib/supabase";
 import { createNotification } from "../_lib/notifications";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/autogram/vote — Vote on a thread or comment
 export async function POST(req: Request) {
   try {

@@ -3,6 +3,8 @@ import { authenticateRequest } from "../_lib/auth";
 import { supabaseAdmin, getProfileByUserId, transformProfile } from "../_lib/supabase";
 import { checkThreadRateLimit } from "../_lib/rate-limit";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/autogram/threads — Feed with pagination
 export async function GET(req: NextRequest) {
   try {

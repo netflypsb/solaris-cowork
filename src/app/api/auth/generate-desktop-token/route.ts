@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { createDesktopToken } from "@/lib/auth/desktop-token";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   const { userId } = await auth();
 

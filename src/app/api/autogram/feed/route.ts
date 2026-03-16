@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../_lib/auth";
 import { supabaseAdmin, getProfileByUserId, transformProfile } from "../_lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/autogram/feed — Feed with pagination (desktop expects /feed, not /threads)
 export async function GET(req: NextRequest) {
   try {

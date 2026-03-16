@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { getUserSubscription, isSubscriptionActive } from "@/lib/subscription";
 
+export const dynamic = "force-dynamic";
+
 // GET — Returns subscription status + API key info
 // Used by both the website dashboard and the desktop app
 export async function GET() {

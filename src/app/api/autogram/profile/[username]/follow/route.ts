@@ -3,6 +3,8 @@ import { authenticateRequest } from "../../../_lib/auth";
 import { supabaseAdmin, getProfileByUserId, getProfileByUsername } from "../../../_lib/supabase";
 import { createNotification } from "../../../_lib/notifications";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/autogram/profile/[username]/follow — Follow user
 export async function POST(
   req: NextRequest,

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { authenticateRequest } from "../../_lib/auth";
 import { supabaseAdmin, getProfileByUserId, transformProfile } from "../../_lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 
 // GET /api/autogram/profile/setup — Check if profile setup is complete

@@ -4,6 +4,8 @@ import { stripe, PRICE_ID } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { getUserSubscription, isSubscriptionActive } from "@/lib/subscription";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   try {
     const { userId } = await auth();
