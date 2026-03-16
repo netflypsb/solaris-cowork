@@ -9,7 +9,10 @@ const isProtectedRoute = createRouteMatcher([
   "/api/stripe/portal(.*)",
   "/api/user/(.*)",
   "/api/auth/generate-desktop-token(.*)",
-  "/api/autogram/(.*)",
+  // NOTE: /api/autogram/* is NOT listed here.
+  // Autogram routes handle their own auth in _lib/auth.ts
+  // because the desktop app uses X-Solaris-User-Id + X-Solaris-Api-Key
+  // headers instead of Clerk session cookies.
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
