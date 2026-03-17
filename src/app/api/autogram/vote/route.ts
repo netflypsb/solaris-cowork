@@ -21,26 +21,30 @@ export async function POST(req: Request) {
       );
     }
 
-    const { targetType, targetId, voteType } = await req.json();
+    const body = await req.json();
+    // Accept both snake_case (desktop) and camelCase field names
+    const targetType = body.target_type || body.targetType;
+    const targetId = body.target_id || body.targetId;
+    const voteType = body.vote_type || body.voteType;
 
     // Validate inputs
-    if (!["thread", "comment"].includes(targetType)) {
+    if (!targetType || !["thread", "comment"].includes(targetType)) {
       return NextResponse.json(
-        { error: 'targetType must be "thread" or "comment"' },
+        { error: 'target_type must be "thread" or "comment"' },
         { status: 400 }
       );
     }
 
     if (!targetId) {
       return NextResponse.json(
-        { error: "targetId is required" },
+        { error: "target_id is required" },
         { status: 400 }
       );
     }
 
-    if (!["up", "down"].includes(voteType)) {
+    if (!voteType || !["up", "down"].includes(voteType)) {
       return NextResponse.json(
-        { error: 'voteType must be "up" or "down"' },
+        { error: 'vote_type must be "up" or "down"' },
         { status: 400 }
       );
     }
