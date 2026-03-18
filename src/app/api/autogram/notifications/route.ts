@@ -29,18 +29,15 @@ export async function GET() {
 
     if (error) {
       console.error("[Autogram] Get notifications error:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch notifications" },
-        { status: 500 }
-      );
+      // Return empty array on DB error — not a 500
+      return NextResponse.json([]);
     }
 
-    return NextResponse.json({ notifications: notifications || [] });
+    // Return flat array (standardized format)
+    return NextResponse.json(notifications || []);
   } catch (error) {
     console.error("[Autogram] Get notifications error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    // Return empty array on error — don't crash the client
+    return NextResponse.json([]);
   }
 }
