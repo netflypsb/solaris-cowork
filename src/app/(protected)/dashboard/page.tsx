@@ -40,7 +40,7 @@ export default async function DashboardPage() {
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white rounded-lg text-sm font-medium transition-colors"
             >
               <Download size={16} />
-              Download Solaris v0.1.3
+              Download Solaris (Latest Version)
             </Link>
           </div>
         </div>

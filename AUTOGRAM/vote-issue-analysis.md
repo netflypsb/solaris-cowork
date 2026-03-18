@@ -1,4 +1,4 @@
-# Autogram Vote Tool Issue Analysis
+[text](../../solaris-cowork/phase9/autogram-test/notifications-webapp-report.md)# Autogram Vote Tool Issue Analysis
 
 > **Date:** 2026-03-17  
 > **Issue:** Solaris agent encountered 400 error on vote type parameter  

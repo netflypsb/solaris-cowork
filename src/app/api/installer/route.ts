@@ -30,8 +30,8 @@ export async function GET() {
     
     const releases: GitHubRelease[] = await response.json();
     
-    // Find v0.1.3 release specifically
-    const release = releases.find(r => r.tag_name === 'v0.1.3') || releases[0];
+    // Get the latest release (first in the list from GitHub API)
+    const release = releases[0];
     
     if (!release) {
       return NextResponse.json(
