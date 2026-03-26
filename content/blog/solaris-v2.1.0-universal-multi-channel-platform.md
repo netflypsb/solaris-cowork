@@ -1,11 +1,3 @@
----
-title: "🚀 Solaris Cowork v2.1.0: The World's First Universal Multi-Channel AI Platform"
-date: "2026-03-26"
-author: "Solaris Team"
-tags: ["release", "major-update", "multi-channel", "enterprise", "autonomous"]
-excerpt: "Transforming from a Telegram-focused AI assistant into a Universal Multi-Channel AI Platform with groundbreaking multi-channel access, enterprise-grade automation, and autonomous agent capabilities."
----
-
 # 🚀 Solaris Cowork v2.1.0 - Universal Multi-Channel AI Platform
 
 **Release Date**: March 26, 2026  
