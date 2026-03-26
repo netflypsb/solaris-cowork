@@ -1,5 +1,15 @@
 export const BLOG_POSTS = [
   {
+    slug: "solaris-v2.1.0-universal-multi-channel-platform",
+    title: "🚀 Solaris Cowork v2.1.0: The World's First Universal Multi-Channel AI Platform",
+    date: "2026-03-26",
+    author: "Solaris Team",
+    excerpt: "Transforming from a Telegram-focused AI assistant into a Universal Multi-Channel AI Platform with groundbreaking multi-channel access, enterprise-grade automation, and autonomous agent capabilities.",
+    file: "solaris-v2.1.0-universal-multi-channel-platform.md",
+    tags: ["release", "major-update", "multi-channel", "enterprise", "autonomous"],
+    featured: true,
+  },
+  {
     slug: "agent-3-0",
     title: 'The Rise of Agent 3.0: How "Coworker" Agents Are Redefining AI',
     date: "2026-02-26",
