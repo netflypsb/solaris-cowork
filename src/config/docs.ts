@@ -72,6 +72,22 @@ export const DOCS_PAGES = [
     icon: "Layers",
   },
   {
+    slug: "telegram-integration",
+    title: "Telegram Integration",
+    description: "Complete guide to Telegram bot setup, monetization, and enterprise features",
+    category: "Integrations",
+    file: "telegram-user-guide.md",
+    icon: "MessageSquare",
+  },
+  {
+    slug: "autonomous-agent-runtime",
+    title: "Autonomous Agent Runtime",
+    description: "Proactive scheduling, event triggers, and multi-agent orchestration",
+    category: "Advanced",
+    file: "autonomous-agent-runtime-user-guide.md",
+    icon: "Rocket",
+  },
+  {
     slug: "terms-of-service",
     title: "Terms of Service",
     description: "Legal terms governing your use of Solaris",
